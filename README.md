@@ -35,19 +35,19 @@ Phases 1 and 2 are trained once. Phase 3 is retrained per fold with Leave-One-Ce
 └── models/                 # Legacy directory
 ```
 
-## Required Data
+## Data Acquisition
 
-Place these in `data/raw/`:
+All raw data files should be placed in `data/raw/`. The pipeline integrates five primary sources from the Genomics of Drug Sensitivity in Cancer 2 (GDSC2) and Cancer Dependency Map (DepMap) projects.
 
-| File | Description |
-|------|-------------|
-| `GDSC2 Fitted Dose Response Oct 27 2023.xlsx` | Drug response data (LN_IC50) |
-| `DepMap Model Data.csv` | Cell line metadata (lineage, subtype) |
-| `drugs_with_smiles.csv` | Drug names and SMILES strings |
-| `cell_ge.csv` | GSVA pathway enrichment scores (pathways × cell lines) |
-| `Omics Somatic Mutations.csv` | Somatic mutation calls per cell line |
-| `Breast Cancer Proteomic Dynamics (2).csv` | Breast cancer proteomics |
-| `ReactomePathways.gmt` | Reactome pathway gene sets |
+| File | Source | How to obtain |
+|------|--------|---------------|
+| `GDSC2 Fitted Dose Response Oct 27 2023.xlsx` | GDSC2 (Yang et al., 2012) | Download from [cancerrxgene.org/downloads/bulk_download](https://www.cancerrxgene.org/downloads/bulk_download) under *Dose Response Data* → *GDSC2*. Only pairs with RMSE < 0.3 are used. |
+| `drugs_with_smiles.csv` | GDSC2 | Download the compound list with SMILES from the same GDSC bulk download page. Compounds with invalid SMILES are excluded automatically. |
+| `DepMap Model Data.csv` | DepMap (Broad, 2023) | Download `Model.csv` from [depmap.org/portal/data_page](https://depmap.org/portal/data_page/?tab=allData) (DepMap Public 23Q4). Provides lineage and subtype annotations used to define pan-cancer, breast, and TNBC subsets. |
+| `Omics Somatic Mutations.csv` | DepMap (Broad, 2023) | Download `OmicsSomaticMutations.csv` from the same DepMap data page. Binary mutation status is extracted for 18 breast cancer driver genes. |
+| `cell_ge.csv` | MSigDB + GSVA | Computed by running Gene Set Variation Analysis (Hänzelmann et al., 2013) in R on cell line expression data across 1,707 MSigDB pathways (Subramanian et al., 2005). The resulting cell-line × pathway matrix should be saved as `cell_ge.csv`. |
+| `Breast Cancer Proteomic Dynamics (2).csv` | Sun et al. (2023) | Download from the supplementary data of [Sun et al. (2023)](https://doi.org/10.1016/j.mcpro.2023.100602). Contains mass spectrometry proteomics for breast cancer cell lines. |
+| `ReactomePathways.gmt` | MSigDB / Reactome | Download from [gsea-msigdb.org/gsea/msigdb](https://www.gsea-msigdb.org/gsea/msigdb/) under *Reactome* gene sets in GMT format. |
 
 ## Setup
 
@@ -73,15 +73,14 @@ Requires PyTorch, PyTorch Geometric, torch-scatter, RDKit, scikit-learn, scipy, 
 
 ## Configuration
 
-Key parameters are set in `tnbc.ipynb` cell 2 (`cfg` dictionary):
+Training hyperparameters are hardcoded inline in `tnbc.ipynb`. Key values:
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `phase1_lr` | 1e-3 | Phase 1 learning rate |
-| `phase2_lr` | 8e-5 | Phase 2 learning rate |
-| `phase3_lr` | 1e-4 | Phase 3 learning rate |
-| `phase{1,2,3}_epochs` | 100, 50, 50 | Max epochs per phase |
-| `phase{1,2,3}_batch` | 256, 64, 64 | Batch sizes |
+| Hyperparameter | Phase 1 (Pan-cancer) | Phase 2 (Breast) | Phase 3 (TNBC) |
+|----------------|----------------------|-------------------|----------------|
+| Learning rate | 1e-3 | 8e-5 | 1e-4 |
+| Max epochs | 100 | 50 | 50 |
+| Batch size | 256 | 64 | 64 |
+| Drug encoder | Trainable | Frozen | Frozen |
 
 Device is auto-detected (CUDA → MPS → CPU).
 
