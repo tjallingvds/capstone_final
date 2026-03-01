@@ -1,10 +1,10 @@
-# TNBC Drug Cytotoxicity Prediction
+# GARNET — TNBC Drug Response Prediction
 
-Three-phase transfer learning pipeline for predicting drug cytotoxicity (LN_IC50) in Triple-Negative Breast Cancer (TNBC) cell lines using Graph Neural Networks.
+Three-phase transfer learning pipeline for predicting drug response (LN IC50) in Triple-Negative Breast Cancer (TNBC) cell lines using a Graph Attention Network.
 
 ## Method
 
-A hybrid GIN + TransformerConv GNN encodes drug molecular graphs, while an MLP encodes cell line features (GSVA pathway scores, somatic mutations, proteomics). A bilinear attention layer fuses both representations, feeding into multi-task heads for IC50 regression, sensitivity classification, and reconstruction regularisation.
+A hybrid GIN + TransformerConv GNN encodes drug molecular graphs, while a residual feedforward network encodes cell-line features (GSVA pathway scores, somatic mutations, proteomics). Scaled dot-product cross-attention fuses both representations, feeding into multi-task heads for IC50 regression, sensitivity classification, and reconstruction regularisation.
 
 Training proceeds in three phases with cell-line-level splitting to prevent data leakage:
 
@@ -14,7 +14,7 @@ Training proceeds in three phases with cell-line-level splitting to prevent data
 | 2 | Breast cancer (all TNBC cells excluded) | Adapt to breast-specific patterns |
 | 3 | TNBC only, LOCO CV (21 folds) | Specialise for TNBC; one cell line held out per fold |
 
-Phases 1 and 2 are trained once. Phase 3 is retrained per fold with Leave-One-Cell-Line-Out (LOCO) cross-validation. Protein feature selection is done per fold on train/val cells only to avoid leakage.
+Phases 1 and 2 are trained once with the drug encoder frozen in Phase 2. Phase 3 is retrained per fold with Leave-One-Cell-Line-Out (LOCO) cross-validation. Protein feature selection is done per fold on train/val cells only to avoid leakage.
 
 ## Repository Structure
 
@@ -23,16 +23,19 @@ Phases 1 and 2 are trained once. Phase 3 is retrained per fold with Leave-One-Ce
 ├── visualisations.ipynb    # Evaluation, baselines, and all figures
 ├── requirements.txt
 ├── README.md
+├── LICENSE
 ├── data/
-│   ├── raw/                # Input data (see below)
-│   └── processed/          # Cached drug graphs
+│   ├── raw/                # Input data (see Data Acquisition below)
+│   └── processed/          # Cached drug molecular graphs
 ├── results/
-│   ├── models/tnbc/        # LOCO fold checkpoints + shared Phase 1/2 models
-│   ├── viz/                # Prediction CSVs from visualisations.ipynb
-│   └── *.csv / *.pdf/png   # Metrics and figures
-├── data_splits/            # Saved split indices
-├── prebatched_data/        # Pre-batched tensors for faster training
-└── models/                 # Legacy directory
+│   ├── models/tnbc/
+│   │   ├── loco_shared/    # Shared Phase 1 & 2 checkpoints
+│   │   └── loco_fold{1..21}/  # Per-fold Phase 3 checkpoints
+│   ├── viz/                # GNN predictions and DrEval metrics CSVs
+│   ├── *.csv               # Baseline metrics and per-drug Spearman scores
+│   └── *.pdf / *.png       # Publication figures
+├── prebatched_data/tnbc/   # Pre-batched tensors (Phase 1–3, per fold)
+└── results/loco_cv_results_cell_line.pkl  # Aggregated LOCO CV results
 ```
 
 ## Data Acquisition
@@ -66,14 +69,14 @@ Requires PyTorch, PyTorch Geometric, torch-scatter, RDKit, scikit-learn, scipy, 
    - Pre-batched data cache (`prebatched_data/tnbc/`)
 
 2. **Generate figures and baselines** — run all cells in `visualisations.ipynb`. This produces:
-   - GNN predictions per fold (DrEval-style evaluation)
+   - GNN predictions per fold (DrEval-style residualized evaluation)
    - Random Forest and ElasticNet LOCO baselines
    - All publication figures (PDF + PNG)
    - Statistical tests (Friedman + pairwise Wilcoxon)
 
 ## Configuration
 
-Training hyperparameters are hardcoded inline in `tnbc.ipynb`. Key values:
+Training hyperparameters are hardcoded inline in `tnbc.ipynb`:
 
 | Hyperparameter | Phase 1 (Pan-cancer) | Phase 2 (Breast) | Phase 3 (TNBC) |
 |----------------|----------------------|-------------------|----------------|
