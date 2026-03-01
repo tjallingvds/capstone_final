@@ -1,0 +1,2 @@
+overall_pearson,overall_r2,resid_pearson,resid_r2,median_spearman,median_spearman_resid,median_baseline_spearman,frac_rho_gt_03,frac_rho_gt_05
+0.5747537560815164,0.3237145651835325,0.001674539992762666,-1.5015242783880964,-0.19935064935064933,-0.0493734335839599,-1.0,0.0045871559633027525,0.0
