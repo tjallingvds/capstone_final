@@ -1,10 +1,5 @@
-# Data (too large for git)
-data/
-prebatched_data/
-
-# Model checkpoints
-results/models/
-models/
+# Raw data (too large, not ours to distribute)
+data/raw/
 
 # OS files
 .DS_Store
