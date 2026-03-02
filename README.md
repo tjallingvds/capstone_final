@@ -25,7 +25,7 @@ Phases 1 and 2 are trained once with the drug encoder frozen in Phase 2. Phase 3
 ├── README.md
 ├── LICENSE
 ├── data/
-│   ├── raw/                # Input data (see Data Acquisition below)
+│   ├── raw/                # Source datasets (included via Git LFS)
 │   └── processed/          # Cached drug molecular graphs
 ├── results/
 │   ├── models/tnbc/
@@ -34,13 +34,14 @@ Phases 1 and 2 are trained once with the drug encoder frozen in Phase 2. Phase 3
 │   ├── viz/                # GNN predictions and DrEval metrics CSVs
 │   ├── *.csv               # Baseline metrics and per-drug Spearman scores
 │   └── *.pdf / *.png       # Publication figures
-├── prebatched_data/tnbc/   # Pre-batched tensors (Phase 1–3, per fold)
-└── results/loco_cv_results_cell_line.pkl  # Aggregated LOCO CV results
+└── prebatched_data/tnbc/   # Pre-batched tensors (Phase 1–3, per fold)
 ```
 
-## Data Acquisition
+All data, model checkpoints, and prebatched tensors are included in the repository via Git LFS for exact reproducibility. After cloning, run `git lfs pull` to download the large files.
 
-All raw data files should be placed in `data/raw/`. The pipeline integrates five primary sources from the Genomics of Drug Sensitivity in Cancer 2 (GDSC2) and Cancer Dependency Map (DepMap) projects.
+## Data Sources
+
+All raw data files are included in `data/raw/` (tracked with Git LFS). The pipeline integrates five primary sources from the Genomics of Drug Sensitivity in Cancer 2 (GDSC2) and Cancer Dependency Map (DepMap) projects. Original download locations are listed below for reference.
 
 | File | Source | How to obtain |
 |------|--------|---------------|
@@ -55,6 +56,10 @@ All raw data files should be placed in `data/raw/`. The pipeline integrates five
 ## Setup
 
 ```bash
+git lfs install
+git clone https://github.com/tjallingvds/capstone_final.git
+cd capstone_final
+git lfs pull
 pip install -r requirements.txt
 ```
 
